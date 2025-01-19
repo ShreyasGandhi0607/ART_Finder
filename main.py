@@ -6,6 +6,7 @@ import google.generativeai as genai
 from wordcloud import WordCloud, STOPWORDS
 from transformers import pipeline
 import json
+import tempfile
 # Importing custom scraper functions
 from services.google_scrapper import serp_scrapper
 from services.quora_scrapper import extract_quora_data
@@ -259,7 +260,22 @@ def generate_insights():
         logging.error(f"Error in generating insights: {e}")
         return jsonify({"error": str(e)}), 500
 
+
+def generate_word_cloud(text, topic):
+    try:
+        stopwords = set(STOPWORDS)
+        wordcloud = WordCloud(width=800, height=400, 
+                            background_color="white", 
+                            stopwords=stopwords).generate(text)
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as tmp:
+            filepath = tmp.name
+            wordcloud.to_file(filepath)
+            return filepath
+    except Exception as e:
+        logging.error(f"Error generating word cloud: {e}")
+        return None
 # Run Flask App
 if __name__ == "__main__":
     os.makedirs("static", exist_ok=True)  # Ensure static directory exists for word cloud images
-    app.run(host="0.0.0.0", port=8000)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port)
