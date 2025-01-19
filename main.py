@@ -59,6 +59,57 @@ def analyze_sentiment(texts):
         logging.error(f"Error analyzing sentiment: {e}")
     return sentiments
 
+# def get_competitor_analysis(topic):
+#     """
+#     Fetch and refine competitor analysis using SERP scraper and optionally Gemini.
+#     """
+#     try:
+#         logging.info(f"Fetching competitors for topic: {topic}")
+
+#         # Use the SERP scraper to fetch competitor-related information
+#         competitor_data = serp_scrapper(f"{topic} competitors")
+#         if not competitor_data:
+#             logging.warning("No competitor data found.")
+#             return []
+
+#         # Extract meaningful competitor names or links
+#         competitors = []
+#         for entry in competitor_data:
+#             # Example: Extract only names or relevant parts
+#             if isinstance(entry, str):
+#                 competitors.append(entry.strip())
+
+#         # Remove duplicates and keep unique competitors
+#         competitors = list(set(competitors))
+#         logging.info(f"Raw competitors from SERP: {competitors}")
+
+#         # Use Gemini to refine competitor data further
+#         if competitors:
+#             competitor_text = "\n".join(competitors)
+#             analysis_prompt = f"""
+#             Analyze the following competitor data related to {topic} and provide only the key competitors in JSON format:
+#             just dont add that "```json" at start  and "```" at end
+#             {{
+#                 "competitors": []
+#             }}
+#             Competitor Data:
+#             {competitor_text}
+#             """
+#             try:
+#                 response = gemini_model.generate_content(analysis_prompt)
+#                 if response and response.text:
+#                     refined_data = json.loads(response.text.strip())
+#                     logging.info(f"Refined competitors from Gemini: {refined_data.get('competitors', [])}")
+#                     return refined_data.get("competitors", [])
+#             except Exception as e:
+#                 logging.error(f"Error refining competitors with Gemini: {e}")
+
+#         return competitors
+#     except Exception as e:
+#         logging.error(f"Error fetching competitor analysis: {e}")
+#         return []
+
+
 def analyze_with_gemini(content, topic):
     """
     Analyze content using Gemini with specific prompts for different insight types.
@@ -117,7 +168,8 @@ def run_scrapers_and_summarize(topic):
         "best_ctas": [],
         "YT_LINKS": [],
         "sentiment": {"positive": 0, "negative": 0, "neutral": 0},
-        "word_cloud": ""
+        "word_cloud": "",
+        "competitors": [],
     }
 
     try:
@@ -158,6 +210,9 @@ def run_scrapers_and_summarize(topic):
 
             except Exception as scraper_error:
                 logging.error(f"Error running {name} scraper: {scraper_error}")
+        
+        # competitors = get_competitor_analysis(topic)
+        # combined_insights["competitors"] = competitors
 
         # Process collected data
         if combined_analysis_text:
@@ -207,4 +262,4 @@ def generate_insights():
 # Run Flask App
 if __name__ == "__main__":
     os.makedirs("static", exist_ok=True)  # Ensure static directory exists for word cloud images
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=8000)
